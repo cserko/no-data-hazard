@@ -1,0 +1,11 @@
+1 addi $t1, $s0, 1
+2 lw $t3, 0($s0)
+3 sw $t3, 0($s0)
+4 add $t5, $t3, $t1
+5 sub $t2, $t5, $t1
+6 addi $t3, $t3, 2
+7 add $t4, $t1, $t0
+8 lw $t5, 0($t3)
+9 add $t6, $t5, $t5
+10 add $t7, $t6, $t5
+11 end
