@@ -1,11 +1,11 @@
-1 addi $t1, $s0, 1
-2 lw $t3, 0($s0)
-3 sw $t3, 0($s0)
-4 add $t5, $t3, $t1
-5 sub $t2, $t5, $t1
-6 addi $t3, $t3, 2
-7 add $t4, $t1, $t0
-8 lw $t5, 0($t3)
-9 add $t6, $t5, $t5
-10 add $t7, $t6, $t5
-11 end
+1 lw $s0, 0($t5)
+2 lw $s0, 0($s0)
+3 add $s1, $s0, $s2
+4 addi $t0, $t3, 4
+5 or $t3, $t4, $t5
+6 add $s1, $s0, $s2 
+7 lw $s9, 0($t3)
+8 sw $t0, 0($s9) 
+9 addi $t3, $t3, 4
+10 end
+11 sw $t3, 0($t1)
