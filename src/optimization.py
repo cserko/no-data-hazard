@@ -167,7 +167,7 @@ class DependencyGraph(object):
         elif graph.lineno < nop_line: #go down
             if self._all_big(nop_line, graph.raw_children) and self.active[nop_line][graph.lineno - 1] is not None and \
                                                 self.neighbors_independent(graph.lineno) and \
-                                                    self.war_waw_free(graph, nop_line):
+                                                    self.war_waw_free(graph, nop_line) and self.waw_free(graph.lineno, nop_line):
                 self.active[nop_line][graph.lineno - 1] = True
         elif highest_line + self.get_num(highest_line) < nop_line and self.active[nop_line][graph.lineno - 1] is not None and self.neighbors_independent(graph.lineno) and \
                                                     self.war_waw_free(graph, nop_line): # go up
@@ -185,6 +185,13 @@ class DependencyGraph(object):
         if  highest_line == -1:
             return 1
         else: return int(wf_lookup[self.lines[highest_line-1].operation.lstrip().rstrip()]) + 1
+
+    def waw_free(self, lineno, nop_line):
+        for i in range (lineno+1, nop_line):
+            if isinstance(self.lines[i-1], Line) and not self.lines[i-1].write is None and not self.lines[lineno-1].write is None:
+                if self.lines[lineno-1].write.lstrip().rstrip() == self.lines[i-1].write.lstrip().rstrip():
+                    return False
+        return True
     def war_waw_free(self, node, nop_line):
         dependent = None
         have_child = True if node.raw_children != [] else False
