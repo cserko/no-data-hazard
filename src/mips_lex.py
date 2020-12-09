@@ -21,7 +21,6 @@ tokens = (
     'SW',
     'NOP',
     'SHOW',
-
 )
 
 # Regular expression rules for simple tokens
@@ -60,8 +59,10 @@ def t_NUMBER(t):
     t.value = int(t.value)    
     return t
 
+
 def t_newline(t):
     r'\n+'
+
 
     #print("Exiting. . .")
 #ignore whitespaces and tabs
