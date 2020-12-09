@@ -96,7 +96,6 @@ if __name__ == "__main__":
     parser.add_option("-p", "--path", dest="readfile" )
 
     (args, _) = parser.parse_args()
-    print(args)
     parser = yacc.yacc()
 
     try:
@@ -134,12 +133,14 @@ if __name__ == "__main__":
         DG = DependencyGraph(lines, out_of_order=True)
         DG.get_edges()
         DG.get_dependency_tree()
-        DG.print_nop_loc()
-        DG.print_dependency_graph()
+        #DG.print_dependency_graph() # comment out for debugging
+        #DG.print_dependencies()
+        DG.get_nop_loc()
         DG.scheduler()
+
     elif args.checkup == "yes":
-        DG = DependencyGraph(lines, out_of_order=False)
-        DG.print_dependencies()
+        DG = DependencyGraph(lines, out_of_order=True)
+        #DG.print_dependencies()
     else: 
         raise FileNotFoundError
         

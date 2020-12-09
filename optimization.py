@@ -55,7 +55,7 @@ class Dependency(object):
         return ("hazard type: {} \n caused lineno: {} \n affected lineno: {} \n on register: {} \n"
         .format(self.hazard_type, self.caused, self.affected, self.register) )
 
-
+wf_lookup = {"lw": 1, "add": 0, "sub": 0, "addi": 0, "subi": 0, "or": 0, "and": 2, "sw": 0}
 class DependencyGraph(object):
     def __init__(self, lines, out_of_order=False):
         self.out_of_order = out_of_order
@@ -89,7 +89,7 @@ class DependencyGraph(object):
         print("Listing Dependencies. . . ")
         flag = False
         for i in self.dependencies:
-            if abs(i.caused - i.affected) < 2:
+            if abs(i.caused - i.affected) <= wf_lookup[i.operation.lstrip().rstrip()]:
                 print(i)
                 flag = True
         if not flag:
@@ -145,10 +145,10 @@ class DependencyGraph(object):
     def print_each(self):
         [print(i) for i in self.dependencies]
 
-    def print_nop_loc(self):
+    def get_nop_loc(self):
         for i in self.lines:
             if isinstance(i, NOP): self.nop_loc.append(int(i.lineno))
-        print(self.nop_loc)
+        #print(self.nop_loc)
 
     def scheduler(self):
         self.active = {i:[False for j in self.lines ] for i in self.nop_loc} # reach -> line - 1
@@ -165,11 +165,14 @@ class DependencyGraph(object):
         if highest_line > nop_line:
             return 
         elif graph.lineno < nop_line: #go down
-            if self._all_big(nop_line, graph.raw_children) and self.active[nop_line][graph.lineno - 1] is not None:
+            if self._all_big(nop_line, graph.raw_children) and self.active[nop_line][graph.lineno - 1] is not None and \
+                                                self.neighbors_independent(graph.lineno) and \
+                                                    self.war_waw_free(graph, nop_line):
                 self.active[nop_line][graph.lineno - 1] = True
-        elif highest_line + 2 < nop_line and self.active[nop_line][graph.lineno - 1] is not None: #go up
+        elif highest_line + self.get_num(highest_line) < nop_line and self.active[nop_line][graph.lineno - 1] is not None and self.neighbors_independent(graph.lineno) and \
+                                                    self.war_waw_free(graph, nop_line): # go up
                 self.active[nop_line][graph.lineno - 1] = True
-        else:
+        else: #Once discarded goes into limbo 
             self.active[nop_line][graph.lineno - 1] = None
 
         if graph.raw_children == []:
@@ -178,8 +181,41 @@ class DependencyGraph(object):
         highest_line = graph.lineno
         for child in graph.raw_children:
             self._scheduler(nop_line, child, highest_line)
+    def get_num(self, highest_line):
+        if  highest_line == -1:
+            return 1
+        else: return int(wf_lookup[self.lines[highest_line-1].operation.lstrip().rstrip()]) + 1
+    def war_waw_free(self, node, nop_line):
+        dependent = None
+        have_child = True if node.raw_children != [] else False
+        future_child = False 
+        for i in self.dependencies:
+            if i.hazard_type == hazards["waw"] and \
+                                            int(i.affected) == int(node.lineno) and \
+                                            int(i.caused) > int(nop_line):
+                dependent = i.caused
+        for line in range(nop_line+1, node.lineno):
+            if isinstance(self.lines[line-1], Line) and self.lines[node.lineno-1].write in self.lines[line-1].reads:
+                #print(self.lines[node.lineno-1].write, self.lines[line-1].reads)
+                future_child = True
 
+        if future_child:
+            #print(node.lineno, "------------------------")
+            #print(have_child, dependent, future_child)
+            return False
+        else: return True
+    
 
+    def neighbors_independent(self, line):
+        if line - 1 == 0 or not isinstance(self.lines[line-2], Line) or not isinstance(self.lines[line], Line):
+            return True         
+        up = self.lines[line - 2]
+        bottom = self.lines[line]
+        if not up.write in bottom.reads: 
+            return True 
+        else: 
+            return False
+        
     def _all_big(self, nop_line, node_list): # helper
         for i in node_list:
             if i.lineno <= nop_line + 1:
@@ -188,7 +224,7 @@ class DependencyGraph(object):
 
     def replace(self):
         line_line = { } # lineno:lineno
-        print(self.active)
+        #print(self.active)
         self.available_table = [True for i in self.lines]
         for i in self.active.keys():
             try:
@@ -218,21 +254,40 @@ class DependencyGraph(object):
 
 class Nope(object):
     def __init__(self):
-        self.nf_lookup = {"lw": 2, "add": 2, "addi": 2, "or": 2, "sw": 0}
-        self.wf_lookup = {"lw": 1, "add": 0, "addi": 0, "or": 0, "sw": 0}
+        self.nf_lookup = {"lw": 2, "add": 2, "sub": 2, "addi": 2, "or": 2, "and": 2, "sw": 0}
+        self.wf_lookup = {"lw": 1, "add": 0, "sub": 0, "addi": 0, "or": 0, "and": 2, "sw": 0}
         self.nop_after = { }
         self.code = None
+        self.dependencies = None
         self.filename = None
     def add_nops(self, dependencies, code, forwarding=False):
+        self.dependencies = dependencies
         self.filename = "forward.txt" if forwarding == True else "noforward.txt"
         lookup = self.nf_lookup if not forwarding else self.wf_lookup
         self.code = code
         for dependency in dependencies:
             if - dependency.caused + dependency.affected < lookup[dependency.operation] + 1:
-                nop = lookup[dependency.operation] + 1 - dependency.affected + dependency.caused
-                if not dependency.caused in self.nop_after.keys(): 
-                    self.nop_after[dependency.caused] = nop
+                if self._next_instruction_check(dependency):
+                    nop = lookup[dependency.operation] + 1 - dependency.affected + dependency.caused
+                    if not dependency.caused in self.nop_after.keys(): 
+                        self.nop_after[dependency.caused] = nop
+                        self._print_out(dependency)
+        print("", end="\n")
         self.generate_code()
+
+    def _print_out(self, dependency):
+        print(dependency.caused, "-", dependency.affected, " on ", dependency.register, end=", ")
+
+    def _next_instruction_check(self, dependency):
+        #print(dependency)
+        line_affected = dependency.affected
+        neighbor = dependency.caused + 1
+        if neighbor + 1 != line_affected:
+            return True
+        for dep in self.dependencies:
+            if dep.caused == neighbor and dependency.affected == dep.affected: 
+                return False
+        return True
 
     def generate_code(self):
         added_nop = 0
