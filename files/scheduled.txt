@@ -1,10 +1,10 @@
 1 lw $s0, 0($t5)
-2 addi $t0, $t3, 4
-3 lw $s0, 0($s0)
-4 or $t3, $t4, $t5
-5 add $s1, $s0, $s2
-6 lw $s9, 0($t3)
-7 add $s1, $s0, $s2
-8 sw $t0, 0($s9)
-9 addi $t3, $t3, 4
+2 lw $s0, 0($s1)
+3 addi $t0, $t3, 4
+4 add $s1, $s0, $s2
+5 or $t3, $t4, $t5
+6 add $s1, $s0, $s2
+7 lw $s9, 0($t3)
+8 addi $t3, $t3, 4
+9 sw $t0, 0($s9)
 10 end
