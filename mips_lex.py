@@ -21,7 +21,6 @@ tokens = (
     'SW',
     'NOP',
     'SHOW',
-
 )
 
 # Regular expression rules for simple tokens

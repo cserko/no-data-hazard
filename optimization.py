@@ -168,12 +168,8 @@ class DependencyGraph(object):
             if self._all_big(nop_line, graph.raw_children) and self.active[nop_line][graph.lineno - 1] is not None:
                 self.active[nop_line][graph.lineno - 1] = True
         elif highest_line + 2 < nop_line and self.active[nop_line][graph.lineno - 1] is not None: #go up
-
                 self.active[nop_line][graph.lineno - 1] = True
         else:
-            #if graph.lineno == 5:
-            #    print(5)
-            #    print(highest_line, "--------------")
             self.active[nop_line][graph.lineno - 1] = None
 
         if graph.raw_children == []:
@@ -192,19 +188,17 @@ class DependencyGraph(object):
 
     def replace(self):
         line_line = { } # lineno:lineno
+        print(self.active)
         self.available_table = [True for i in self.lines]
         for i in self.active.keys():
-            #print(i)
-            #[print(k+1, " :", j) for k,j in enumerate(self.active[i]) if j is True and self.available_table[k+1]]
-            line_line[i] = [k+1 for k,j in enumerate(self.active[i]) if j is True and self.available_table[k+1]][0]
-            self.available_table[line_line[i]] = False 
-        #print(line_line)
-        #print(line_line.values())
+            try:
+                line_line[i] = [k+1 for k,j in enumerate(self.active[i]) if j is True and self.available_table[k+1]][0]
+                self.available_table[line_line[i]] = False 
+            except IndexError:
+                pass
         self.scheduled_lines = []
         count = 1
-
         for line in self.lines:
-            #print(type(line), line.lineno)
             ln = int(line.lineno.lstrip().rstrip())
             if ln in line_line.keys():
                 self.scheduled_lines.append(copy.deepcopy(self.lines[line_line[ln] - 1]))
@@ -250,5 +244,5 @@ class Nope(object):
                 self.code.insert(lineno + i + added_nop, NOP(lineno + i + 1 + added_nop)) 
             added_nop += nop_count
         with open(self.filename, "w") as f:
-            f.writelines([i.__str__().lstrip()+"\n" for i in self.code[0:-1]])
-            f.write(self.code[-1].__str__())
+            f.writelines([i.__str__().lstrip().rstrip()+"\n" for i in self.code[0:-1]])
+            f.write(self.code[-1].__str__().lstrip().rstrip())
