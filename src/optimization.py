@@ -247,7 +247,7 @@ class DependencyGraph(object):
             count += 1
         
         
-        with open("scheduled.txt", "w") as f:
+        with open("files/scheduled.txt", "w") as f:
             f.writelines([i.__str__().lstrip()+"\n" for i in self.scheduled_lines[0:-1]])
             f.write(self.scheduled_lines[-1].__str__())
 
@@ -262,7 +262,7 @@ class Nope(object):
         self.filename = None
     def add_nops(self, dependencies, code, forwarding=False):
         self.dependencies = dependencies
-        self.filename = "forward.txt" if forwarding == True else "noforward.txt"
+        self.filename = "files/forward.txt" if forwarding == True else "files/noforward.txt"
         lookup = self.nf_lookup if not forwarding else self.wf_lookup
         self.code = code
         for dependency in dependencies:

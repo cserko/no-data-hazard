@@ -1,8 +1,0 @@
-1 nop
-2 lw $t0, 0($t1)
-3 nop
-4 nop
-5 or $t3, $t0, $t3
-6 add $t3, $t5, $t6
-7 add $t3, $t9, $t6
-8 end

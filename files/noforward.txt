@@ -1,0 +1,17 @@
+1 lw $s0, 0($t5)
+2 nop
+3 nop
+4 lw $s0, 0($s0)
+5 nop
+6 nop
+7 add $s1, $s0, $s2
+8 addi $t0, $t3, 4
+9 or $t3, $t4, $t5
+10 nop
+11 add $s1, $s0, $s2
+12 lw $s9, 0($t3)
+13 nop
+14 nop
+15 sw $t0, 0($s9)
+16 addi $t3, $t3, 4
+17 end
